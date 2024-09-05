@@ -1,0 +1,203 @@
+<head>
+	<script src="/js/libs/tone.js"></script>
+	<script src="/js/libs/tonejs-ui.js"></script>
+	<script src="/js/libs/tonejs_midi.js"></script>
+	<script src="/js/libs/lua_parser.js"></script>
+	<script src="/js/libs/midi.js"></script>
+
+	<link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+	<tone-content>
+		<div id="Description">
+			Convert your MIDI file to song for Auto-Playable Piano<br>
+			By <a href="https://dead0duck.ru">DeadDuck</a><br><br>
+			Libraries used on this site: <a href="https://tonejs.github.io/Midi/">Tone.JS</a>, <a href="https://cifkao.github.io/html-midi-player/">html-midi-player</a> and <a href="https://www.npmjs.com/package/lua-json?activeTab=readme">lua-json</a>.
+		</div>
+		<div id="FileDrop">
+			<div id="Text">
+				Drop a midi file here
+			</div>
+			<input type="file" accept="audio/midi" />
+		</div>
+		<div id="SongTracks" style="display: none">
+			
+		</div>
+		<div id="Results">
+			<textarea id="ResultsText" placeholder="Some huge LUA table output..." readonly></textarea>
+		</div>
+		
+		<midi-player id="bruh" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/salamander" visualizer="#visualizer" style="width:100%"></midi-player>
+		<midi-visualizer type="waterfall" id="visualizer" style="position:relative;left:-230"></midi-visualizer>
+	</tone-content>
+
+	<script src="js/timeouts.js"></script>
+	<script src="js/utility.js"></script>
+
+	<script type="text/javascript">
+		if ( !window.File || !window.FileReader || !window.FileList || !window.Blob )
+		{
+			document.querySelector("#FileDrop #Text").textContent =
+				"Reading files not supported by this browser";
+		}
+		else
+		{
+			document
+				.querySelector("#FileDrop input")
+				.addEventListener("change", (e) => {
+					//get the files
+					const files = e.target.files;
+					if (files.length > 0) {
+						const file = files[0];
+						document.querySelector(
+							"#FileDrop #Text"
+						).textContent = file.name;
+						parseFile(file);
+					}
+				});
+		}
+
+		let startTime = 0
+		let fileName = null
+		let currentTracks = null;
+		let disabledTracks = null;
+
+		var player = document.getElementById("bruh")
+
+		// Taken from html-midi-player
+		function formatTime(seconds) {
+			const negative = (seconds < 0);
+			seconds = Math.floor(Math.abs(seconds || 0));
+			const s = seconds % 60;
+			const m = (seconds - s) / 60;
+			const h = (seconds - s - 60 * m) / 3600;
+			const sStr = (s > 9) ? `${s}` : `0${s}`;
+			const mStr = (m > 9 || !h) ? `${m}:` : `0${m}:`;
+			const hStr = h ? `${h}:` : '';
+			return (negative ? '-' : '') + hStr + mStr + sStr;
+		}
+
+		function refreshPlayer()
+		{
+			let notes = player.ns.notes
+			let lastNote = notes[notes.length - 1]
+			player.ns.totalTime = lastNote && lastNote.endTime || 0
+			player.seekBar.max = String(player.ns.totalTime);
+			player.totalTimeLabel.textContent = formatTime(player.ns.totalTime);
+
+			for (const visualizer of player.visualizerListeners.keys()) {
+				if (visualizer.noteSequence != player.ns) {
+					visualizer.noteSequence = player.ns;
+				}
+				visualizer.reload();
+            }
+		}
+
+		function parseTracks()
+		{
+			let tr_name = fileName.replaceAll("'", "\\'").slice(0, -4)
+
+			let resultTr = []
+			for(let i = 0; i < currentTracks.length; i++)
+			{
+				if(disabledTracks[i]) continue;
+
+				let tr = track2json(currentTracks[i])
+				resultTr = [...resultTr, ...tr].sort((a, b) => a.t - b.t) // Merge track with final result and sort it by note play time
+			}
+
+			startTime = resultTr[0] && resultTr[0].t || 0
+			resultTr.forEach(note => {note.t -= startTime; note.t = parseFloat((note.t).toFixed(7))})
+			
+			let toExport = []
+			resultTr.forEach(note => {
+				toExport.push(note.n)
+				toExport.push(note.t)
+			})
+
+			document.querySelector("#ResultsText").value = `duckInstruments.AddSong('${tr_name}',${parse2lua(toExport)})\n`;
+
+			if (player.ns && player.ns.origNotes)
+			{
+				let newNotes = []
+				for (let i = 0; i < player.ns.origNotes.length; i++)
+				{
+					let note = player.ns.origNotes[i]
+					if (disabledTracks[note.instrument]) continue
+
+					newNotes.push(note)
+				}
+				player.ns.notes = newNotes
+				refreshPlayer()
+			}
+		}
+
+		function changeTrackState(i, en)
+		{
+			player.stop()
+			player.currentTime = 0
+
+			disabledTracks[i] = en
+			parseTracks()
+		}
+
+		function parseFile(file) {
+			//read the file
+			const reader = new FileReader();
+			reader.onload = function (e) {
+				const midi = new Midi(e.target.result);
+				const tracks = midi.tracks.filter(t => t.notes.length > 0)
+
+				player.src = window.URL.createObjectURL(file)
+				player.addEventListener("load", (e) => {
+					let notes = player.ns.notes
+					let startTime = notes[0].startTime
+					notes.forEach(n => {
+						n.program = 0
+						n.isDrum = false
+						n.velocity = 30 // Higher = louder
+						n.startTime -= startTime
+						n.endTime -= startTime
+					})
+
+					// Fuck this
+					player.ns.origNotes = JSON.parse(JSON.stringify(notes))
+					parseTracks()
+				})
+
+				if(tracks.length > 1)
+				{
+					document.querySelector("#SongTracks").innerHTML = ``
+					document.querySelector("#SongTracks").style.display = "block"
+					
+					disabledTracks = []
+					for(let i = 0; i < tracks.length; i++)
+					{
+						document.querySelector("#SongTracks").innerHTML += `
+						<div>
+							<input type="checkbox" id="track_enabled${i}" data-id="${i}" checked>
+							<label for="track_enabled${i}">${i+1}. ${tracks[i].instrument.name || tracks[i].instrument.family}</label>
+						</div>`
+						disabledTracks[i] = false
+					}
+					document.querySelectorAll("[id^=track_enabled]").forEach(el => {
+						el.addEventListener('change', (e) => {
+							changeTrackState(parseInt(el.dataset.id), !el.checked)
+						})
+					})
+				}
+				else
+				{
+					disabledTracks = [false]
+					document.querySelector("#SongTracks").style.display = "none"
+				}
+
+				fileName = file.name
+				currentTracks = tracks;
+				parseTracks()
+			};
+			reader.readAsArrayBuffer(file);
+		}
+	</script>
+</body>
