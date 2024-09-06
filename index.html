@@ -28,7 +28,10 @@
 			<textarea id="ResultsText" placeholder="Some huge LUA table output..." readonly></textarea>
 		</div>
 		
-		<midi-player id="bruh" sound-font="https://storage.googleapis.com/magentadata/js/soundfonts/salamander" visualizer="#visualizer" style="width:100%"></midi-player>
+		<p>
+			Song Preview:
+		</p>
+		<midi-player id="midiPlayer" visualizer="#visualizer" style="width:100%"></midi-player>
 		<midi-visualizer type="waterfall" id="visualizer" style="position:relative;left:-230"></midi-visualizer>
 	</tone-content>
 
@@ -36,10 +39,9 @@
 	<script src="js/utility.js"></script>
 
 	<script type="text/javascript">
-		if ( !window.File || !window.FileReader || !window.FileList || !window.Blob )
+		if (!window.File || !window.FileReader || !window.FileList || !window.Blob)
 		{
-			document.querySelector("#FileDrop #Text").textContent =
-				"Reading files not supported by this browser";
+			document.querySelector("#FileDrop #Text").textContent = "Reading files not supported by this browser";
 		}
 		else
 		{
@@ -63,21 +65,7 @@
 		let currentTracks = null;
 		let disabledTracks = null;
 
-		var player = document.getElementById("bruh")
-
-		// Taken from html-midi-player
-		function formatTime(seconds) {
-			const negative = (seconds < 0);
-			seconds = Math.floor(Math.abs(seconds || 0));
-			const s = seconds % 60;
-			const m = (seconds - s) / 60;
-			const h = (seconds - s - 60 * m) / 3600;
-			const sStr = (s > 9) ? `${s}` : `0${s}`;
-			const mStr = (m > 9 || !h) ? `${m}:` : `0${m}:`;
-			const hStr = h ? `${h}:` : '';
-			return (negative ? '-' : '') + hStr + mStr + sStr;
-		}
-
+		var player = document.getElementById("midiPlayer")
 		function refreshPlayer()
 		{
 			let notes = player.ns.notes
@@ -129,6 +117,12 @@
 					newNotes.push(note)
 				}
 				player.ns.notes = newNotes
+
+				player.player.playNote = (t, e) => {
+					let note = getNoteName(e.pitch);
+					playNote(note);
+				}
+
 				refreshPlayer()
 			}
 		}
@@ -159,6 +153,8 @@
 						n.velocity = 30 // Higher = louder
 						n.startTime -= startTime
 						n.endTime -= startTime
+
+						n.endTimeGmod = n.startTime + 2
 					})
 
 					// Fuck this
