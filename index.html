@@ -25,22 +25,29 @@
 
 <body>
 	<tone-content>
-		<div id="Description">
+		<div id="LanguageSwitcher" style="position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 8px;">
+			<label for="languageSelect" id="languageLabel" data-i18n="language_label">Language:</label>
+			<select id="languageSelect">
+				<option value="en" data-i18n="language_option_en">English</option>
+				<option value="ru" data-i18n="language_option_ru">Русский</option>
+			</select>
+		</div>
+		<div id="Description" data-i18n="description">
 			Convert your MIDI file to song for <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3325497170">Auto Playable Piano</a><br>
 			By <a href="https://dead0duck.ru"><img src="favicon-16x16.png"> DeadDuck</a><br><br>
 			Libraries used on this site: <a href="https://tonejs.github.io/Midi/">Tone.JS</a>, <a href="https://cifkao.github.io/html-midi-player/">html-midi-player</a> and <a href="https://www.npmjs.com/package/lua-json?activeTab=readme">lua-json</a>.
 		</div>
 		<div id="FileDrop">
-			<div id="Text">
+			<div id="Text" data-i18n="drop_midi">
 				Drop a midi file here
 			</div>
 			<input type="file" accept="audio/midi" />
 		</div>
 		<div id="SongInfo">
-			<h3>Information about song (Please use Latin characters):</h3>
-			<div class="input_div"><label class="input_label" for="title">Song Name: </label> <input type="text" id="title" name="duck_piano_title"></div>
-			<span>For the song name, I recommend using the format: "Author - Title"</span><br><br>
-			<div class="input_div"><label class="input_label" for="cover">Song Cover Art Path: </label> <input type="text" id="cover" name="duck_piano_cover"></div>
+			<h3 id="songInfoHeader" data-i18n="info_heading">Information about song (Please use Latin characters):</h3>
+			<div class="input_div"><label class="input_label" for="title" id="titleLabel" data-i18n="label_song_name">Song Name: </label> <input type="text" id="title" name="duck_piano_title"></div>
+			<span id="songNameHelp" data-i18n="helper_song_name">For the song name, I recommend using the format: "Author - Title"</span><br><br>
+			<div class="input_div"><label class="input_label" for="cover" id="coverLabel" data-i18n="label_cover">Song Cover Art Path: </label> <input type="text" id="cover" name="duck_piano_cover"></div>
 		</div>
 		<div id="SongTracks" style="display: none">
 			
@@ -88,19 +95,19 @@
 				}
 			</style>
 
-			<button id="Download" aria-label="Download" disabled="" onclick="downloadFile()">
+			<button id="Download" aria-label="Download" disabled="" onclick="downloadFile()" data-i18n="download_button">
 				Download song file
 			</button>
 		</div>
-		<h3>
+		<h3 id="SongPreviewHeader" data-i18n="preview_heading">
 			Song Preview:
 		</h3>
 		<midi-player id="midiPlayer" visualizer="#visualizer" style="width:100%"></midi-player>
 		<midi-visualizer type="waterfall" id="visualizer" style="position:relative;left:-230"></midi-visualizer>
 
 		<div>
-			<h3>What should I do with downloaded file?</h3>
-			<p>
+			<h3 id="howToUseTitle" data-i18n="faq_download_heading">What should I do with downloaded file?</h3>
+			<p id="howToUseText" data-i18n="faq_download_desc">
 				In version 1.4.0, I changed the song handling logic, so now they are stored not in LUA code, but in binary files.<br>
 				After you download this file, go to your Garry's Mod folder, then to the "garrysmod/addons" folder. Inside it, you can create a folder with any Latin name (for example, "duck_piano_rock"). Then, inside that folder, create the following subfolders: "data_static/duck_instrument/songs".<br>
 				<br>
@@ -110,8 +117,8 @@
 				`data_static/duck_instrument/songs/inabakumori/rainy_boots.dat`
 			</p>
 			<hr>
-			<h3>How to add cover art file?</h3>
-			<p>
+			<h3 id="coverArtTitle" data-i18n="faq_cover_heading">How to add cover art file?</h3>
+			<p id="coverArtText" data-i18n="faq_cover_desc">
 				If you want to add a cover art for your song, you need to specify its name when creating the song on the website (for example, "inabakumori/rainy_boots.png"). The file itself must be a <b>PNG image with a resolution of 64x64 pixels</b> (larger size doesn't make sense). <br>
 				<br>
 				Place this file in your addon folder. Inside it, create the following folders:<br>
@@ -120,8 +127,8 @@
 				Then, following the path you specified on the site, create the folder "inabakumori" (in our example) and put the file `rainy_boots.png` inside it.
 			</p>
 			<hr>
-			<h3>Will my songs created before the update still work?</h3>
-			<p>
+			<h3 id="compatibilityTitle" data-i18n="faq_old_heading">Will my songs created before the update still work?</h3>
+			<p id="compatibilityText" data-i18n="faq_old_desc">
 				Yes, they will! Support for the old song format has been preserved. <br><br>
 				However, I strongly recommend updating your addon and migrating your songs to the new format. This can be done without leaving Garry's Mod. <br><br>
 				You need to disable all other piano addons (so that only the default songs and your own songs remain), start a Singleplayer game, and enter the console command `duck_piano_migrate`. <br>
@@ -134,10 +141,12 @@
 	<script src="js/timeouts.js"></script>
 	<script src="js/utility.js"></script>
 
+	<script src="/js/i18n.js"></script>
+
 	<script type="text/javascript">
 		if (!window.File || !window.FileReader || !window.FileList || !window.Blob)
 		{
-			document.querySelector("#FileDrop #Text").textContent = "Reading files not supported by this browser";
+			document.querySelector("#FileDrop #Text").textContent = translate("file_not_supported");
 		}
 		else
 		{
@@ -300,7 +309,7 @@
 			const magic = encoder.encode("DuckInstSong\x00");
 
 			const version = new Uint8Array(2);
-			new DataView(version.buffer).setUint16(0, 2, true);
+			new DataView(version.buffer).setUint16(0, 2, true);		// Current format version is 2
 
 			const titleBytes = encoder.encode(title + '\x00');
 
@@ -389,7 +398,7 @@
 
 				if(tracks.length > 1)
 				{
-					document.querySelector("#SongTracks").innerHTML = `<h3>Song Tracks:</h3>`
+					document.querySelector("#SongTracks").innerHTML = translate("tracks_heading");
 					document.querySelector("#SongTracks").style.display = "block"
 					
 					disabledTracks = []
