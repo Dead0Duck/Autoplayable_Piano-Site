@@ -42,12 +42,43 @@
 		<div id="Results">
 			<textarea id="ResultsText" placeholder="Some huge LUA table output..." readonly></textarea>
 		</div>
-		
-		<p>
+		<h3>
 			Song Preview:
-		</p>
+		</h3>
 		<midi-player id="midiPlayer" visualizer="#visualizer" style="width:100%"></midi-player>
 		<midi-visualizer type="waterfall" id="visualizer" style="position:relative;left:-230"></midi-visualizer>
+
+		<div>
+			<h3>What should I do with downloaded file?</h3>
+			<p>
+				In version 1.4.0, I changed the song handling logic, so now they are stored not in LUA code, but in binary files.<br>
+				After you download this file, go to your Garry's Mod folder, then to the "garrysmod/addons" folder. Inside it, you can create a folder with any Latin name (for example, "duck_piano_rock"). Then, inside that folder, create the following subfolders: "data_static/duck_instrument/songs".<br>
+				<br>
+				Inside the <b>songs</b> folder, I recommend creating another folder with a unique Latin name (e.g. your nickname or the song author's nickname) and placing the downloaded file inside it.<br>
+				<br>
+				The final path to the file should look something like this:<br>
+				`data_static/duck_instrument/songs/inabakumori/rainy_boots.dat`
+			</p>
+			<hr>
+			<h3>How to add cover art file?</h3>
+			<p>
+				If you want to add a cover art for your song, you need to specify its name when creating the song on the website (for example, "inabakumori/rainy_boots.png"). The file itself must be a <b>PNG image with a resolution of 64x64 pixels</b> (larger size doesn't make sense). <br>
+				<br>
+				Place this file in your addon folder. Inside it, create the following folders:<br>
+				`materials/deadduck/instruments/song_covers`<br>
+				<br>
+				Then, following the path you specified on the site, create the folder "inabakumori" (in our example) and put the file `rainy_boots.png` inside it.
+			</p>
+			<hr>
+			<h3>Will my songs created before the update still work?</h3>
+			<p>
+				Yes, they will! Support for the old song format has been preserved. <br><br>
+				However, I strongly recommend updating your addon and migrating your songs to the new format. This can be done without leaving Garry's Mod. <br><br>
+				You need to disable all other piano addons (so that only the default songs and your own songs remain), start a Singleplayer game, and enter the console command `duck_piano_migrate`. <br>
+				The command will automatically go through all songs in the old format and convert them to the new format. After that, you just need to move the files from the folder "data/duck_instrument/migrate/" to "addons/&lt;your_addon_name&gt;/data_static/duck_instrument/songs/". <br>
+				Note that the command may not work correctly with song names that are not in Latin characters.
+			</p>
+		</div>
 	</tone-content>
 
 	<script src="js/timeouts.js"></script>
