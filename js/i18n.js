@@ -1,7 +1,7 @@
 const translations = {
 			en: {
 				title: "Auto Playable Piano",
-				description: 'Convert your MIDI file to song for <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3325497170">Auto Playable Piano</a><br>By <a href="https://dead0duck.ru"><img src="favicon-16x16.png"> DeadDuck</a><br><br>Libraries used on this site: <a href="https://tonejs.github.io/Midi/">Tone.JS</a>, <a href="https://cifkao.github.io/html-midi-player/">html-midi-player</a> and <a href="https://www.npmjs.com/package/lua-json?activeTab=readme">lua-json</a>.',
+				description: 'Convert your MIDI file to song for <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3325497170">Auto Playable Piano</a><br>By <a href="https://dead0duck.ru"><img src="favicon-16x16.png"> DeadDuck</a><br><br>Libraries used on this site: <a href="https://tonejs.github.io/Midi/">Tone.JS</a>, <a href="https://cifkao.github.io/html-midi-player/">html-midi-player</a>.',
 				drop_midi: "Drop a midi file here",
 				info_heading: "Information about song (Please use Latin characters):",
 				label_song_name: "Song Name:",
@@ -25,7 +25,7 @@ const translations = {
 			},
 			ru: {
 				title: "Auto Playable Piano",
-				description: 'Преобразуйте ваш MIDI-файл в песню для <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3325497170">Auto Playable Piano</a><br>От <a href="https://dead0duck.ru"><img src="favicon-16x16.png"> DeadDuck</a><br><br>Использованные на сайте библиотеки: <a href="https://tonejs.github.io/Midi/">Tone.JS</a>, <a href="https://cifkao.github.io/html-midi-player/">html-midi-player</a> и <a href="https://www.npmjs.com/package/lua-json?activeTab=readme">lua-json</a>.',
+				description: 'Преобразуйте ваш MIDI-файл в песню для <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3325497170">Auto Playable Piano</a><br>От <a href="https://dead0duck.ru"><img src="favicon-16x16.png"> DeadDuck</a><br><br>Использованные на сайте библиотеки: <a href="https://tonejs.github.io/Midi/">Tone.JS</a>, <a href="https://cifkao.github.io/html-midi-player/">html-midi-player</a>.',
 				drop_midi: "Перетащите MIDI-файл сюда",
 				info_heading: "Информация о песне (используйте латинские символы):",
 				label_song_name: "Название песни:",
@@ -39,7 +39,7 @@ const translations = {
 				faq_cover_heading: "Как добавить файл обложки?",
 				faq_cover_desc: 'Если вы хотите добавить обложку для песни, укажите её имя при создании песни на сайте (например, "inabakumori/rainy_boots.png"). Сам файл должен быть <b>PNG-изображением размером 64x64 пикселя</b> (Смысла в большем размере нет). <br><br>Поместите файл в папку вашего аддона. Внутри неё создайте такие папки:<br>`materials/deadduck/instruments/song_covers`<br><br>Затем, следуя по указанному на сайте пути, создайте папку "inabakumori" (в случае нашего примера) и поместите туда файл `rainy_boots.png`.',
 				faq_old_heading: "Будут ли работать мои песни, созданные до обновления?",
-				faq_old_desc: 'Да, будут! Старый формат песен пока поддерживается. <br><br>Тем не менее я настоятельно рекомендую обновить аддон и перенести песни в новый формат. Это можно сделать не покидая Garry\'s Mod. <br><br>Необходимо отключить все остальные аддоны на песни для пианино (так, чтобы остались только стандартные песни и ваши собственные), запустить <b>одиночную игру</b> и ввести в консоль команду `duck_piano_migrate`. <br><br>Команда автоматически обработает все песни в старом формате и конвертирует их в новый. После этого нужно переместить файлы из папки "data/duck_instrument/migrate/" в "addons/&lt;ваше_название_аддона&gt;/data_static/duck_instrument/songs/". <br><br>Обратите внимание, что команда может работать некорректно с названиями песен, содержащими нелатинские символы.',
+				faq_old_desc: 'Да, будут! Старый формат песен пока поддерживается. <br><br>Тем не менее я настоятельно рекомендую обновить ваш аддон и перенести песни в новый формат. Это можно сделать не покидая Garry\'s Mod. <br><br>Необходимо отключить все остальные аддоны на песни для пианино (так, чтобы остались только стандартные песни и ваши собственные), запустить <b>одиночную игру</b> и ввести в консоль команду `duck_piano_migrate`. <br><br>Команда автоматически обработает все песни в старом формате и конвертирует их в новый. После этого нужно переместить файлы из папки "data/duck_instrument/migrate/" в "addons/&lt;ваше_название_аддона&gt;/data_static/duck_instrument/songs/". <br><br>Обратите внимание, что команда может работать некорректно с названиями песен, содержащими нелатинские символы.',
 				file_not_supported: "Чтение файлов не поддерживается этим браузером",
 				language_label: "Язык:",
 				language_option_en: "English",
