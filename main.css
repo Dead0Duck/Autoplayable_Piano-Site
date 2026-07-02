@@ -109,3 +109,11 @@ a:active {
 	background-color: transparent;
 	text-decoration: underline;
 }
+
+.input_div {
+	display: flex;
+}
+
+.input_div input {
+	flex-grow: 1;
+}
