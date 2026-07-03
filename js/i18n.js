@@ -1,7 +1,7 @@
 const translations = {
 			en: {
 				title: "Auto Playable Piano",
-				description: 'Convert your MIDI file to song for <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3325497170">Auto Playable Piano</a><br>By <a href="https://dead0duck.ru"><img src="favicon-16x16.png"> DeadDuck</a><br><br>Libraries used on this site: <a href="https://tonejs.github.io/Midi/">Tone.JS</a>, <a href="https://cifkao.github.io/html-midi-player/">html-midi-player</a>.',
+				description: 'Convert your MIDI file to song for <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3325497170">Auto Playable Piano</a><br>By <a href="https://dead0duck.ru"><img src="favicon-16x16.png"> DeadDuck</a><br><br>Libraries used on this site: <a href="https://tonejs.github.io/Midi/">Tone.JS</a>, <a href="https://cifkao.github.io/html-midi-player/">html-midi-player</a> and <a href="https://magenta.github.io/magenta-js/music/index.html">@magenta/music</a>.',
 				drop_midi: "Drop a midi file here",
 				info_heading: "Information about song (Please use Latin characters):",
 				label_song_name: "Song Name:",
@@ -25,7 +25,7 @@ const translations = {
 			},
 			ru: {
 				title: "Auto Playable Piano",
-				description: 'Преобразуйте ваш MIDI-файл в песню для <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3325497170">Auto Playable Piano</a><br>От <a href="https://dead0duck.ru"><img src="favicon-16x16.png"> DeadDuck</a><br><br>Использованные на сайте библиотеки: <a href="https://tonejs.github.io/Midi/">Tone.JS</a>, <a href="https://cifkao.github.io/html-midi-player/">html-midi-player</a>.',
+				description: 'Преобразуйте ваш MIDI-файл в песню для <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3325497170">Auto Playable Piano</a><br>От <a href="https://dead0duck.ru"><img src="favicon-16x16.png"> DeadDuck</a><br><br>Использованные на сайте библиотеки: <a href="https://tonejs.github.io/Midi/">Tone.JS</a>, <a href="https://cifkao.github.io/html-midi-player/">html-midi-player</a> и <a href="https://magenta.github.io/magenta-js/music/index.html">@magenta/music</a>.',
 				drop_midi: "Перетащите MIDI-файл сюда",
 				info_heading: "Информация о песне (используйте латинские символы):",
 				label_song_name: "Название песни:",
