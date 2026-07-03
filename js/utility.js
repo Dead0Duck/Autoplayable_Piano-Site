@@ -35,13 +35,21 @@ function getNoteName(noteNumber)
 	return notes[noteNumber % 12] + Math.floor((noteNumber / 12) - 1);
 }
 
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+const pianoBuffers = {}; // noteName -> AudioBuffer
+
+async function loadSample(note) {
+	const response = await fetch(`/sounds/${note}.wav`);
+	const arrayBuffer = await response.arrayBuffer();
+	pianoBuffers[note] = await audioContext.decodeAudioData(arrayBuffer);
+}
+
 const allowedZero = {
 	"A": true,
 	"A#": true,
 	"B": true,
 }
-
-let pianoAudios = {}
 function preloadAudios()
 {
 	notes.forEach(o => {
@@ -51,20 +59,21 @@ function preloadAudios()
 			if (i == 8 && o != 'C') continue
 			if (i == 0 && !allowedZero[note]) continue
 
-			pianoAudios[note] = new Audio(`/sounds/${note}.wav`)
-			pianoAudios[note].volume = 0.35;
+			loadSample(note)
 		}
 	})
 }
 preloadAudios()
 
-function playNote(note)
-{
-	let a = pianoAudios[note]
-	if (a)
-	{
-		a.pause();
-		a.currentTime = 0;
-		a.play();
-	}
+function playNote(note, time = audioContext.currentTime, duration = 4, velocity = 0.8) {
+	const source = audioContext.createBufferSource();
+	source.buffer = pianoBuffers[note];
+
+	const gain = audioContext.createGain();
+	gain.gain.value = velocity * 0.35; // твой volume
+
+	source.connect(gain).connect(audioContext.destination);
+
+	source.start(time);
+	source.stop(time + duration);
 }
