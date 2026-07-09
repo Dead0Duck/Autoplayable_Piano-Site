@@ -41,7 +41,7 @@
 			<div id="Text" data-i18n="drop_midi">
 				Drop a midi file here
 			</div>
-			<input type="file" accept="audio/midi" />
+			<input type="file" accept="audio/midi,.dat" />
 		</div>
 		<div id="SongInfo">
 			<h3 id="songInfoHeader" data-i18n="info_heading">Information about song (Please use Latin characters):</h3>
@@ -226,12 +226,19 @@
 			let tr_name = fileName.replaceAll("'", "\\'").slice(0, -4)
 
 			let resultTr = []
-			for(let i = 0; i < currentTracks.length; i++)
+			if (Array.isArray(currentTracks) && currentTracks.length > 0)
 			{
-				if(disabledTracks[i]) continue;
+				for(let i = 0; i < currentTracks.length; i++)
+				{
+					if(disabledTracks[i]) continue;
 
-				let tr = track2json(currentTracks[i])
-				resultTr = [...resultTr, ...tr].sort((a, b) => a.t - b.t) // Merge track with final result and sort it by note play time
+					let tr = track2json(currentTracks[i])
+					resultTr = [...resultTr, ...tr].sort((a, b) => a.t - b.t) // Merge track with final result and sort it by note play time
+				}
+			}
+			else if (Array.isArray(window.ToExport) && window.ToExport.length > 0)
+			{
+				resultTr = window.ToExport.map(note => ({ ...note }));
 			}
 
 			startTime = resultTr[0] && resultTr[0].t || 0
@@ -241,13 +248,13 @@
 
 			window.ToExport = resultTr
 
-			if (player.ns && player.ns.origNotes)
+			if (Array.isArray(currentTracks) && currentTracks.length > 0 && player.ns && player.ns.origNotes)
 			{
 				let newNotes = []
 				for (let i = 0; i < player.ns.origNotes.length; i++)
 				{
 					let note = player.ns.origNotes[i]
-					if (disabledTracks[note.instrument]) continue
+					if (disabledTracks && disabledTracks[note.instrument]) continue
 
 					newNotes.push(note)
 				}
@@ -370,62 +377,179 @@
 			parseTracks()
 		}
 
+		function readCString(bytes, offset) {
+			let end = offset;
+			while (end < bytes.length && bytes[end] !== 0) {
+				end++;
+			}
+
+			const decoder = new TextDecoder("utf-8");
+			const value = decoder.decode(bytes.subarray(offset, end));
+			return {
+				value,
+				nextOffset: end < bytes.length ? end + 1 : end
+			};
+		}
+
+		function parseDuckInstSongFile(buffer, file) {
+			const bytes = new Uint8Array(buffer);
+			if (bytes.length < 13) {
+				return;
+			}
+
+			const decoder = new TextDecoder("utf-8");
+			const magic = decoder.decode(bytes.subarray(0, 13));
+			if (magic !== "DuckInstSong\x00") {
+				return false;
+			}
+
+			// Отключаем список дорожек
+			disabledTracks = [false]
+			document.querySelector("#SongTracks").style.display = "none"
+
+			let offset = 13;
+			const view = new DataView(buffer);
+			view.getUint16(offset, true);
+			offset += 2;
+
+			const titleInfo = readCString(bytes, offset);
+			const title = titleInfo.value || "";
+			offset = titleInfo.nextOffset;
+
+			let coverPath = "";
+			if (offset < bytes.length && bytes[offset] === 1) {
+				offset += 1;
+				const coverInfo = readCString(bytes, offset);
+				coverPath = coverInfo.value || "";
+				offset = coverInfo.nextOffset;
+			} else {
+				offset += 1;
+			}
+
+			const notes = [];
+			while (offset + 9 <= bytes.length) {
+				const noteIndex = bytes[offset];
+				const time = view.getFloat64(offset + 1, true);
+				notes.push({
+					n: indexToNote[noteIndex] || "A0",
+					t: time
+				});
+				offset += 9;
+			}
+
+			document.getElementById("title").value = title;
+			document.getElementById("cover").value = coverPath;
+
+			fileName = file.name;
+			currentTracks = null;
+			disabledTracks = null;
+			document.querySelector("#SongTracks").style.display = "none";
+			document.querySelector("#SongTracks").innerHTML = "";
+
+			const previewBlob = createMidiFromNotes(notes);
+			if (previewBlob) {
+				player.addEventListener("load", applyLoadedPlayerNotes, { once: true });
+				player.src = window.URL.createObjectURL(previewBlob);
+			} else {
+				player.src = "";
+			}
+
+			window.ToExport = notes;
+			document.getElementById("Download").disabled = notes.length < 1;
+			parseTracks();
+		}
+
+		function applyLoadedPlayerNotes() {
+			try {
+				// Не знаю почему, но при загрузке .dat файла, визуализатор не обновляется, поэтому приходится делать это вручную
+				for (const visualizer of player.visualizerListeners.keys()) {
+					if (visualizer.noteSequence != player.ns) {
+						visualizer.noteSequence = player.ns;
+						visualizer.reload();
+					}
+				}
+			} catch(e) {}
+
+			let notes = player.ns.notes
+			if (!Array.isArray(notes) || notes.length < 1) {
+				return;
+			}
+
+			let startTime = notes[0].startTime
+			notes.forEach(n => {
+				n.program = 0
+				n.isDrum = false
+				n.velocity = 30 // Higher = louder
+				n.startTime -= startTime
+				n.endTime -= startTime
+
+				n.endTimeGmod = n.startTime + 2
+			})
+
+			// Fuck this
+			player.ns.origNotes = JSON.parse(JSON.stringify(notes))
+			parseTracks()
+
+			player.player.playNote = (t, e) => {
+				let note = getNoteName(e.pitch);
+				playNote(note);
+			}
+		}
+
+		function parseMidiBuffer(buffer, file) {
+			const midi = new Midi(buffer);
+			const tracks = midi.tracks.filter(t => t.notes.length > 0)
+
+			player.src = window.URL.createObjectURL(file)
+			player.addEventListener("load", applyLoadedPlayerNotes, { once: true })
+
+			if(tracks.length > 1)
+			{
+				document.querySelector("#SongTracks").innerHTML = translate("tracks_heading");
+				document.querySelector("#SongTracks").style.display = "block"
+				
+				disabledTracks = []
+				for(let i = 0; i < tracks.length; i++)
+				{
+					document.querySelector("#SongTracks").innerHTML += `
+					<div>
+						<input type="checkbox" id="track_enabled${i}" data-id="${i}" checked>
+						<label for="track_enabled${i}">${i+1}. ${tracks[i].instrument.name || tracks[i].instrument.family}</label>
+					</div>`
+					disabledTracks[i] = false
+				}
+				document.querySelectorAll("[id^=track_enabled]").forEach(el => {
+					el.addEventListener('change', (e) => {
+						changeTrackState(parseInt(el.dataset.id), !el.checked)
+					})
+				})
+			}
+			else
+			{
+				disabledTracks = [false]
+				document.querySelector("#SongTracks").style.display = "none"
+			}
+
+			fileName = file.name
+			currentTracks = tracks;
+			parseTracks()
+		}
+
 		function parseFile(file) {
 			//read the file
 			const reader = new FileReader();
 			reader.onload = function (e) {
-				const midi = new Midi(e.target.result);
-				const tracks = midi.tracks.filter(t => t.notes.length > 0)
-
-				player.src = window.URL.createObjectURL(file)
-				player.addEventListener("load", (e) => {
-					let notes = player.ns.notes
-					let startTime = notes[0].startTime
-					notes.forEach(n => {
-						n.program = 0
-						n.isDrum = false
-						n.velocity = 30 // Higher = louder
-						n.startTime -= startTime
-						n.endTime -= startTime
-
-						n.endTimeGmod = n.startTime + 2
-					})
-
-					// Fuck this
-					player.ns.origNotes = JSON.parse(JSON.stringify(notes))
-					parseTracks()
-				})
-
-				if(tracks.length > 1)
-				{
-					document.querySelector("#SongTracks").innerHTML = translate("tracks_heading");
-					document.querySelector("#SongTracks").style.display = "block"
-					
-					disabledTracks = []
-					for(let i = 0; i < tracks.length; i++)
-					{
-						document.querySelector("#SongTracks").innerHTML += `
-						<div>
-							<input type="checkbox" id="track_enabled${i}" data-id="${i}" checked>
-							<label for="track_enabled${i}">${i+1}. ${tracks[i].instrument.name || tracks[i].instrument.family}</label>
-						</div>`
-						disabledTracks[i] = false
+				const buffer = e.target.result;
+				const bytes = new Uint8Array(buffer);
+				if (bytes.length >= 13) {
+					const decoder = new TextDecoder("utf-8");
+					if (decoder.decode(bytes.subarray(0, 13)) == "DuckInstSong\x00") {
+						parseDuckInstSongFile(buffer, file);
+						return;
 					}
-					document.querySelectorAll("[id^=track_enabled]").forEach(el => {
-						el.addEventListener('change', (e) => {
-							changeTrackState(parseInt(el.dataset.id), !el.checked)
-						})
-					})
-				}
-				else
-				{
-					disabledTracks = [false]
-					document.querySelector("#SongTracks").style.display = "none"
 				}
 
-				fileName = file.name
-				currentTracks = tracks;
-				parseTracks()
+				return parseMidiBuffer(buffer, file);
 			};
 			reader.readAsArrayBuffer(file);
 		}

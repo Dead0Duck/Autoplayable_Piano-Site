@@ -35,6 +35,36 @@ function getNoteName(noteNumber)
 	return notes[noteNumber % 12] + Math.floor((noteNumber / 12) - 1);
 }
 
+function createMidiFromNotes(notesData) {
+	if (!Array.isArray(notesData) || notesData.length < 1) {
+		return null;
+	}
+
+	try {
+		const midi = new Midi();
+		const track = midi.addTrack();
+
+		notesData.forEach((note, index) => {
+			const startTime = Math.max(0, note.t || 0);
+			const nextNoteTime = notesData[index + 1] ? (notesData[index + 1].t || 0) : (startTime + 0.5);
+			const duration = Math.max(0.1, Math.max(0, nextNoteTime - startTime));
+			track.addNote({
+				name: note.n,
+				time: startTime,
+				duration,
+				velocity: 0.3
+			});
+		});
+
+		const bytes = midi.toArray();
+		return new Blob([bytes], { type: 'audio/midi' });
+	} catch (error) {
+		console.log(error)
+	}
+
+	return null;
+}
+
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 const pianoBuffers = {}; // noteName -> AudioBuffer
