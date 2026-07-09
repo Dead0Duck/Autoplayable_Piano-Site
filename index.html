@@ -549,7 +549,22 @@
 					}
 				}
 
-				return parseMidiBuffer(buffer, file);
+				try {
+					parseMidiBuffer(buffer, file);
+				} catch(e) {
+					document.getElementById("title").value = "";
+					document.getElementById("cover").value = "";
+					player.src = "";
+
+					fileName = file.name;
+					currentTracks = null;
+					disabledTracks = null;
+					document.querySelector("#SongTracks").style.display = "none";
+					document.querySelector("#SongTracks").innerHTML = "";
+
+					window.ToExport = null;
+					document.getElementById("Download").disabled = true;
+				}
 			};
 			reader.readAsArrayBuffer(file);
 		}
